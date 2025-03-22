@@ -288,7 +288,7 @@ interface AutoCompleteCompleteEvent {
                     </div>
                 </form>
                 <ng-template #footer>
-                    <p-button label="Ok" icon="pi pi-check" (onClick)="submitForm()" [disabled]="bookingForm.invalid" />
+                    <p-button label="Book Now" icon="pi pi-check" (onClick)="submitForm()" [disabled]="bookingForm.invalid" />
                 </ng-template>
             </p-dialog>
         </div>`,
