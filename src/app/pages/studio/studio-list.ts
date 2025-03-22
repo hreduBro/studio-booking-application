@@ -520,9 +520,8 @@ export class StudioList implements OnInit {
 
         const closeTime = new Date(date);
         closeTime.setHours(+close.split(':')[0], +close.split(':')[1], 0, 0);
-        const submittedStart = new Date(startTime);
-        const submittedEnd = new Date(endTime);
-
+        const submittedStart = startTime;
+        const submittedEnd = endTime;
         // **Step 1: Check if booking is outside availability time**
         if (submittedStart < openTime || submittedEnd > closeTime) {
             this.messageService.add({
