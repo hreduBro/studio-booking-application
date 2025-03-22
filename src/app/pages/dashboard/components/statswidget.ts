@@ -20,10 +20,10 @@ import { Skeleton } from 'primeng/skeleton';
                         </div>
                     </div>
                     <div class="flex items-center justify-center bg-blue-100 dark:bg-blue-400/10 rounded-border" style="width: 2.5rem; height: 2.5rem">
-                        <i class="pi pi-shopping-cart text-blue-500 !text-xl"></i>
+                        <i class="pi pi-building-columns text-blue-500 !text-xl"></i>
                     </div>
                 </div>
-                <span class="text-muted-color">since last visit</span>
+                <span class="text-muted-color">Since last visit</span>
             </div>
         </div>
         <div class="col-span-12 lg:col-span-6 xl:col-span-3">
@@ -37,7 +37,7 @@ import { Skeleton } from 'primeng/skeleton';
                         </div>
                     </div>
                     <div class="flex items-center justify-center bg-orange-100 dark:bg-orange-400/10 rounded-border" style="width: 2.5rem; height: 2.5rem">
-                        <i class="pi pi-dollar text-orange-500 !text-xl"></i>
+                        <i class="pi pi-shopping-cart text-orange-500 !text-xl"></i>
                     </div>
                 </div>
                 <span class="text-muted-color">Completed</span>
