@@ -27,6 +27,8 @@ import { Tag } from 'primeng/tag';
 import { Message } from 'primeng/message';
 import { Avatar } from 'primeng/avatar';
 import { Chip } from 'primeng/chip';
+import { Divider } from 'primeng/divider';
+import { TimeFormatPipe } from '../../layout/pipes/timeformat.pipe';
 
 interface AutoCompleteCompleteEvent {
     originalEvent: Event;
@@ -36,174 +38,260 @@ interface AutoCompleteCompleteEvent {
 @Component({
     selector: 'app-studio-list',
     standalone: true,
-    imports: [ButtonDirective, DatePickerModule, IconField, InputText, TableModule, FormsModule, Rating, Button, Toast, Dialog, Slider, AutoComplete, Tooltip, ReactiveFormsModule, NgIf, Tag, Message, Avatar, Chip, UpperCasePipe, NgForOf],
-    template: ` <div class="card">
-        <p-toast />
-        <div class="font-semibold text-xl mb-4">Studio List</div>
-        <p-message severity="info">
-            <ng-template #icon>
-                <p-avatar image="https://primefaces.org/cdn/primeng/images/demo/avatar/onyamalimba.png" shape="circle" />
-            </ng-template>
-            <span class="ml-2">Use the filter icon on location coloumn to search for a location. (City/Araea/Radius)</span>
-        </p-message>
-        <p-table
-            #dt1
-            [value]="viewData"
-            styleClass="mt-5"
-            dataKey="id"
-            [rows]="10"
-            [loading]="loading"
-            [scrollable]="true"
-            [rowHover]="true"
-            [showGridlines]="true"
-            [paginator]="true"
-            [rowsPerPageOptions]="[10, 25, 50]"
-            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-            [showCurrentPageReport]="true"
-        >
-            <ng-template #header>
-                <tr>
-                    <th style="min-width: 12rem">
-                        <div class="flex justify-between items-center">Name</div>
-                    </th>
-                    <th style="min-width: 12rem">
-                        <div class="flex justify-between items-center">Type</div>
-                    </th>
-                    <th style="min-width: 14rem">
-                        <div class="flex justify-between items-center">
-                            Location
-                            <p-columnFilter field="representative" matchMode="in" display="menu" [showMatchModes]="false" [showOperator]="false" [showAddButton]="false" [showApplyButton]="false" [showClearButton]="false">
-                                <ng-template #header>
-                                    <div class="px-3 pt-3 pb-0">
-                                        <span class="font-bold"> Search by City/Area </span>
-                                    </div>
-                                </ng-template>
-                                <ng-template #filter let-value1 let-filter="filterCallback">
-                                    <p-autocomplete [style]="{ 'margin-left': '6px' }" [(ngModel)]="locationValue" [suggestions]="items" (completeMethod)="onSearch($event)" dropdown />
-
-                                    <div class="px-3 pt-3 pb-0">
-                                        <div class="flex flex-col">
-                                            <span class="font-bold">Search by Radius</span>
-                                            <small class="text-red-500 cursor-pointer" *ngIf="slider" (click)="getUserLocation()">Try enabling your location access! CLick here!</small>
+    imports: [
+        ButtonDirective,
+        DatePickerModule,
+        IconField,
+        InputText,
+        TableModule,
+        FormsModule,
+        Rating,
+        Button,
+        Toast,
+        Dialog,
+        Slider,
+        AutoComplete,
+        Tooltip,
+        ReactiveFormsModule,
+        NgIf,
+        Tag,
+        Message,
+        Avatar,
+        Chip,
+        UpperCasePipe,
+        NgForOf,
+        Divider,
+        TimeFormatPipe
+    ],
+    template: `
+        <div class="card">
+            <p-toast />
+            <div class="font-semibold text-xl mb-4">Studio List</div>
+            <p-message severity="info">
+                <ng-template #icon>
+                    <p-avatar image="https://primefaces.org/cdn/primeng/images/demo/avatar/onyamalimba.png"
+                              shape="circle" />
+                </ng-template>
+                <span
+                    class="ml-2">Use the filter icon on location coloumn to search for a location. (City/Araea/Radius)</span>
+            </p-message>
+            <p-table
+                #dt1
+                [value]="viewData"
+                styleClass="mt-5"
+                dataKey="id"
+                [rows]="10"
+                [loading]="loading"
+                [scrollable]="true"
+                scrollHeight="500px"
+                [rowHover]="true"
+                [showGridlines]="true"
+                [paginator]="true"
+                [rowsPerPageOptions]="[10, 25, 50]"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+                [showCurrentPageReport]="true"
+            >
+                <ng-template #header>
+                    <tr>
+                        <th style="min-width: 12rem">
+                            <div class="flex justify-between items-center">Name</div>
+                        </th>
+                        <th style="min-width: 12rem">
+                            <div class="flex justify-between items-center">Type</div>
+                        </th>
+                        <th style="min-width: 14rem">
+                            <div class="flex justify-between items-center">
+                                Location
+                                <p-columnFilter field="representative" matchMode="in" display="menu"
+                                                [showMatchModes]="false" [showOperator]="false" [showAddButton]="false"
+                                                [showApplyButton]="false" [showClearButton]="false">
+                                    <ng-template #header>
+                                        <div class="px-3 pt-3 pb-0">
+                                            <span class="font-bold"> Search by City/Area </span>
                                         </div>
-                                    </div>
-                                    <p-slider [ngModel]="activityValues" [disabled]="slider" [range]="false" (onChange)="distanceChange($event.value)" [max]="100" styleClass="m-3" [style]="{ 'min-width': '12rem' }"></p-slider>
-                                    <div class="flex items-center justify-between px-2">
-                                        <span>{{ activityValues[0] === 100 ? 'All' : activityValues[0] + 'm' }}</span>
-                                    </div>
-                                </ng-template>
-                                <ng-template #footer>
-                                    <div>
-                                        <p-button label="Apply" (onClick)="apply()" />
-                                    </div>
-                                </ng-template>
-                            </p-columnFilter>
-                        </div>
-                    </th>
-                    <th style="min-width: 10rem">
-                        <div class="flex justify-between items-center">Amenities List</div>
-                    </th>
-                    <th style="min-width: 10rem">
-                        <div class="flex justify-between items-center">Price per hour</div>
-                    </th>
-                    <th style="min-width: 12rem">
-                        <div class="flex justify-between items-center">Rating</div>
-                    </th>
-                    <th style="min-width: 2rem" pFrozenColumn>
-                        <div class="flex justify-between items-center">Action</div>
-                    </th>
-                </tr>
-            </ng-template>
-            <ng-template #body let-studio>
-                <tr>
-                    <td>
-                        {{ studio.Name }}
-                    </td>
-                    <td>
-                        {{ studio.Type }}
-                    </td>
-                    <td>{{ studio.Location.Area }} , {{ studio.Location.Address }}</td>
-                    <td>
-                        <div class="flex flex-wrap gap-2">
-                            <p-chip *ngFor="let amenity of studio.Amenities" class="!py-0 !pl-0 !pr-4">
-                                <span class="bg-primary-emphasis text-primary-contrast rounded-full w-6 h-6 flex items-center justify-center">
+                                    </ng-template>
+                                    <ng-template #filter let-value1 let-filter="filterCallback">
+                                        <p-autocomplete [style]="{ 'margin-left': '6px' }" [(ngModel)]="locationValue"
+                                                        [suggestions]="items" (completeMethod)="onSearch($event)"
+                                                        dropdown />
+
+                                        <div class="px-3 pt-3 pb-0">
+                                            <div class="flex flex-col">
+                                                <span class="font-bold">Search by Radius</span>
+                                                <small class="text-red-500 cursor-pointer" *ngIf="slider"
+                                                       (click)="getUserLocation()">Try enabling your location access!
+                                                    CLick here!</small>
+                                            </div>
+                                        </div>
+                                        <p-slider [ngModel]="activityValues" [disabled]="slider" [range]="false"
+                                                  (onChange)="distanceChange($event.value)" [max]="100" styleClass="m-3"
+                                                  [style]="{ 'min-width': '12rem' }"></p-slider>
+                                        <div class="flex items-center justify-between px-2">
+                                            <span>{{ activityValues[0] === 100 ? 'All' : activityValues[0] + 'm' }}</span>
+                                        </div>
+                                    </ng-template>
+                                    <ng-template #footer>
+                                        <div>
+                                            <p-button label="Apply" (onClick)="apply()" />
+                                        </div>
+                                    </ng-template>
+                                </p-columnFilter>
+                            </div>
+                        </th>
+                        <th style="min-width: 10rem">
+                            <div class="flex justify-between items-center">Amenities List</div>
+                        </th>
+                        <th style="min-width: 10rem">
+                            <div class="flex justify-between items-center">Price per hour</div>
+                        </th>
+                        <th style="min-width: 12rem">
+                            <div class="flex justify-between items-center">Rating</div>
+                        </th>
+                        <th style="min-width: 2rem" pFrozenColumn [frozen]="true">
+                            <div class="flex justify-between items-center">Action</div>
+                        </th>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-studio>
+                    <tr>
+                        <td>
+                            {{ studio.Name }}
+                        </td>
+                        <td>
+                            {{ studio.Type }}
+                        </td>
+                        <td>{{ studio.Location.Area }} , {{ studio.Location.Address }}</td>
+                        <td>
+                            <div class="flex flex-wrap gap-2">
+                                <p-chip *ngFor="let amenity of studio.Amenities" class="!py-0 !pl-0 !pr-4">
+                                <span
+                                    class="bg-primary-emphasis text-primary-contrast rounded-full w-6 h-6 flex items-center justify-center">
                                     {{ amenity.charAt(0) | uppercase }}
                                 </span>
-                                <span class="ml-2 font-medium">
+                                    <span class="ml-2 font-medium">
                                     {{ amenity }}
                                 </span>
-                            </p-chip>
+                                </p-chip>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="font-medium">{{ studio.Currency }}</span>
+                            <p-tag severity="success" value="{{ studio.PricePerHour }}/-" />
+                        </td>
+                        <td>
+                            <p-rating [(ngModel)]="studio.Rating" [readonly]="true" />
+                        </td>
+                        <td pFrozenColumn [frozen]='true'>
+                            <p-button pTooltip="Book now" tooltipPosition="left" icon="pi pi-bookmark"
+                                      (click)="bookStudio(studio)" severity="primary" rounded />
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr>
+                        <td colspan="8">No Studio found for this filter.</td>
+                    </tr>
+                </ng-template>
+                <ng-template #loadingbody>
+                    <tr>
+                        <td colspan="8">Loading Studio data. Please wait.</td>
+                    </tr>
+                </ng-template>
+                <ng-template #paginatorleft>
+                    <button pButton label="Clear" pTooltip="Clear filter" tooltipPosition="left"
+                            class="p-button-outlined mb-2" icon="pi pi-filter-slash" (click)="clear()"></button>
+                </ng-template>
+            </p-table>
+
+            <p-dialog header="Booking Details" [resizable]="false" [modal]="true" [maximizable]="true" appendTo="body"
+                      [(visible)]="dialogVisible" [style]="{ width: '30vw' }">
+                <table class="w-full text-left">
+                    <tbody>
+                    <tr>
+                        <td class="font-medium">Studio Name</td>
+                        <td class="text-primary">{{ formData?.Name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="font-medium">Type</td>
+                        <td class="text-primary">{{ formData?.Type }}</td>
+                    </tr>
+                    <tr>
+                        <td class="font-medium">Location</td>
+                        <td class="text-primary">{{ formData?.Location?.Address }}</td>
+                    </tr>
+                    <tr>
+                        <td class="font-medium">Price per hour</td>
+                        <td class="text-primary">{{ formData?.Currency }} {{ formData?.PricePerHour }}/-</td>
+                    </tr>
+                    <tr>
+                        <td class="font-medium">Open Time</td>
+                        <td class="text-primary">{{ formData?.Availability?.Open | timeFormat }}</td>
+                    </tr>
+                    <tr>
+                        <td class="font-medium">Close Time</td>
+                        <td class="text-primary">{{ formData?.Availability?.Close | timeFormat }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+                <p-divider />
+                <form [formGroup]="bookingForm" (ngSubmit)="submitForm()">
+                    <div class="flex flex-col gap-4">
+                        <!-- Name Input -->
+                        <div class="flex flex-col gap-2">
+                            <label for="name">Name*</label>
+                            <input [required]="true" pInputText id="name" type="text" placeholder="Enter your full name"
+                                   formControlName="name" />
+                            <small class="text-red-500"
+                                   *ngIf="bookingForm.controls['name'].invalid && bookingForm.controls['name'].touched">Name
+                                is required</small>
                         </div>
-                    </td>
-                    <td>
-                        <span class="font-medium">{{ studio.Currency }}</span>
-                        <p-tag severity="success" value="{{ studio.PricePerHour }}/-" />
-                    </td>
-                    <td>
-                        <p-rating [(ngModel)]="studio.Rating" [readonly]="true" />
-                    </td>
-                    <td pFrozenColumn>
-                        <p-button pTooltip="Book now" tooltipPosition="left" icon="pi pi-bookmark" (click)="bookStudio(studio)" severity="primary" rounded />
-                    </td>
-                </tr>
-            </ng-template>
-            <ng-template #emptymessage>
-                <tr>
-                    <td colspan="8">No Studio found for this filter.</td>
-                </tr>
-            </ng-template>
-            <ng-template #loadingbody>
-                <tr>
-                    <td colspan="8">Loading Studio data. Please wait.</td>
-                </tr>
-            </ng-template>
-            <ng-template #paginatorleft>
-                <button pButton label="Clear" pTooltip="Clear filter" tooltipPosition="left" class="p-button-outlined mb-2" icon="pi pi-filter-slash" (click)="clear()"></button>
-            </ng-template>
-        </p-table>
 
-        <p-dialog header="Booking Details" [resizable]="false" [modal]="true" [maximizable]="true" appendTo="body" [(visible)]="dialogVisible" [style]="{ width: '25vw' }">
-            <form [formGroup]="bookingForm" (ngSubmit)="submitForm()">
-                <div class="flex flex-col gap-4">
-                    <!-- Name Input -->
-                    <div class="flex flex-col gap-2">
-                        <label for="name">Name*</label>
-                        <input [required]="true" pInputText id="name" type="text" placeholder="Enter your full name" formControlName="name" />
-                        <small class="text-red-500" *ngIf="bookingForm.controls['name'].invalid && bookingForm.controls['name'].touched">Name is required</small>
-                    </div>
+                        <!-- Email Input -->
+                        <div class="flex flex-col gap-2">
+                            <label for="email">Email*</label>
+                            <input [required]="true" pInputText id="email" type="email" placeholder="Enter your email"
+                                   formControlName="email" />
+                            <small class="text-red-500"
+                                   *ngIf="bookingForm.controls['email'].invalid && bookingForm.controls['email'].touched">
+                                Enter a valid email address </small>
+                        </div>
 
-                    <!-- Email Input -->
-                    <div class="flex flex-col gap-2">
-                        <label for="email">Email*</label>
-                        <input [required]="true" pInputText id="email" type="email" placeholder="Enter your email" formControlName="email" />
-                        <small class="text-red-500" *ngIf="bookingForm.controls['email'].invalid && bookingForm.controls['email'].touched"> Enter a valid email address </small>
-                    </div>
+                        <!-- Date Picker -->
+                        <div class="flex flex-col gap-2">
+                            <label for="date">Date*</label>
+                            <p-datepicker [required]="true" placeholder="Select booking date" formControlName="date"
+                                          [minDate]="minDate" [showIcon]="true"></p-datepicker>
+                            <small class="text-red-500"
+                                   *ngIf="bookingForm.controls['date'].invalid && bookingForm.controls['date'].touched">Date
+                                is required</small>
+                        </div>
 
-                    <!-- Date Picker -->
-                    <div class="flex flex-col gap-2">
-                        <label for="date">Date*</label>
-                        <p-datepicker [required]="true" placeholder="Select booking date" formControlName="date" [minDate]="minDate" [showIcon]="true"></p-datepicker>
-                        <small class="text-red-500" *ngIf="bookingForm.controls['date'].invalid && bookingForm.controls['date'].touched">Date is required</small>
+                        <div class="flex flex-col gap-2">
+                            <label for="date">Start Time*</label>
+                            <p-datepicker hourFormat="12" [required]="true" formControlName="startTime"
+                                          placeholder="Start Time" [showIcon]="true" [timeOnly]="true"></p-datepicker>
+                            <small class="text-red-500"
+                                   *ngIf="bookingForm.controls['startTime'].invalid && bookingForm.controls['startTime'].touched">Start
+                                time is required</small>
+                            <small class="text-red-500"
+                                   *ngIf="bookingForm.hasError('invalidTimeRange') && bookingForm.touched"> Start and
+                                end time not valid. </small>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="date">End Time*</label>
+                            <p-datepicker [required]="true" hourFormat="12" formControlName="endTime"
+                                          placeholder="End Time" [showIcon]="true" [timeOnly]="true"></p-datepicker>
+                            <small class="text-red-500"
+                                   *ngIf="bookingForm.controls['endTime'].invalid && bookingForm.controls['endTime'].touched">End
+                                time is required</small>
+                        </div>
                     </div>
-
-                    <div class="flex flex-col gap-2">
-                        <label for="date">Start Time*</label>
-                        <p-datepicker hourFormat="12" [required]="true" formControlName="startTime" placeholder="Start Time" [showIcon]="true" [timeOnly]="true"></p-datepicker>
-                        <small class="text-red-500" *ngIf="bookingForm.controls['startTime'].invalid && bookingForm.controls['startTime'].touched">Start time is required</small>
-                        <small class="text-red-500" *ngIf="bookingForm.hasError('invalidTimeRange') && bookingForm.touched"> Start and end time not valid. </small>
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label for="date">End Time*</label>
-                        <p-datepicker [required]="true" hourFormat="12" formControlName="endTime" placeholder="End Time" [showIcon]="true" [timeOnly]="true"></p-datepicker>
-                        <small class="text-red-500" *ngIf="bookingForm.controls['endTime'].invalid && bookingForm.controls['endTime'].touched">End time is required</small>
-                    </div>
-                </div>
-            </form>
-            <ng-template #footer>
-                <p-button label="Ok" icon="pi pi-check" (onClick)="submitForm()" [disabled]="bookingForm.invalid" />
-            </ng-template>
-        </p-dialog>
-    </div>`,
+                </form>
+                <ng-template #footer>
+                    <p-button label="Ok" icon="pi pi-check" (onClick)="submitForm()" [disabled]="bookingForm.invalid" />
+                </ng-template>
+            </p-dialog>
+        </div>`,
     providers: [StudioService, MessageService],
     styles: [
         `
@@ -366,7 +454,8 @@ export class StudioList implements OnInit {
                 location: this.formData.Location.Address,
                 close: this.formData.Availability.Close,
                 open: this.formData.Availability.Open,
-                id: this.formData.Id
+                id: this.formData.Id,
+                name: this.formData.Name
             };
 
             let bookings: any[] = JSON.parse(localStorage.getItem('bookings') || '[]');
