@@ -31,7 +31,7 @@ import { DatePipe } from '@angular/common';
             <ng-template #header>
                 <tr>
                     <th style="min-width: 12rem">
-                        <div class="flex justify-between items-center">Name
+                        <div class="flex justify-between items-center">User Name
                             <p-columnFilter showAddButton="false" type="text" field="name" display="menu" />
                         </div>
                     </th>
@@ -40,6 +40,11 @@ import { DatePipe } from '@angular/common';
                             <p-columnFilter showAddButton="false" type="text" field="email" display="menu" />
                         </div>
 
+                    </th>
+                    <th style="min-width: 12rem">
+                        <div class="flex justify-between items-center">Studio Name
+                            <p-columnFilter showAddButton="false" type="text" field="name" display="menu" />
+                        </div>
                     </th>
                     <th style="min-width: 10rem">
                         <div class="flex justify-between items-center">
@@ -52,7 +57,10 @@ import { DatePipe } from '@angular/common';
                             </div>
                     </th>
                     <th style="min-width: 10rem">
-                        <div class="flex justify-between items-center">Booking Timw</div>
+                        <div class="flex justify-between items-center">Booking Date</div>
+                    </th>
+                    <th style="min-width: 10rem">
+                        <div class="flex justify-between items-center">Booking Time</div>
                     </th>
                 </tr>
             </ng-template>
@@ -63,11 +71,15 @@ import { DatePipe } from '@angular/common';
                     </td>
                     <td>{{ studio.email }}</td>
                     <td>
+                        {{ studio.studioName }}
+                    </td>
+                    <td>
                         {{ studio.type }}
                     </td>
                     <td>
                         {{ studio.location }}
                     </td>
+                    <td>{{ studio.date | date: 'd MMMM y' }}</td>
                     <td>{{ studio.startTime | date: 'hh:mm a' }} - {{ studio.endTime | date: 'hh:mm a' }}</td>
                 </tr>
             </ng-template>

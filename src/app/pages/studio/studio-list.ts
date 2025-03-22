@@ -455,7 +455,7 @@ export class StudioList implements OnInit {
                 close: this.formData.Availability.Close,
                 open: this.formData.Availability.Open,
                 id: this.formData.Id,
-                name: this.formData.Name
+                studioName: this.formData.Name
             };
 
             let bookings: any[] = JSON.parse(localStorage.getItem('bookings') || '[]');
@@ -466,7 +466,7 @@ export class StudioList implements OnInit {
                 this.messageService.add({
                     severity: 'success',
                     summary: 'Booking Confirmed!',
-                    detail: `Your ${this.formData.Type} is booked for ${this.formatDate(this.bookingForm.value.date)} from
+                    detail: `Your studio for ${this.formData.Type} is booked for ${this.formatDate(this.bookingForm.value.date)} from
              ${this.convertTo12HourFormat(this.bookingForm.value.startTime)} to
              ${this.convertTo12HourFormat(this.bookingForm.value.endTime)}.`
                 });
