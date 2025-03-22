@@ -1,14 +1,19 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { Button, ButtonDirective } from 'primeng/button';
 import { IconField } from 'primeng/iconfield';
-import { InputIcon } from 'primeng/inputicon';
 import { InputText } from 'primeng/inputtext';
-import { MultiSelect } from 'primeng/multiselect';
-import { Select } from 'primeng/select';
 import { Slider } from 'primeng/slider';
-import { Table, TableModule } from 'primeng/table';
-import { Representative } from '../service/customer.service';
-import { FormsModule } from '@angular/forms';
+import { TableModule } from 'primeng/table';
+import {
+    AbstractControl,
+    FormBuilder,
+    FormGroup,
+    FormsModule,
+    ReactiveFormsModule,
+    ValidationErrors,
+    ValidatorFn,
+    Validators
+} from '@angular/forms';
 import { Studio, StudioService } from '../service/studio.service';
 import { Rating } from 'primeng/rating';
 import { MessageService } from 'primeng/api';
@@ -16,158 +21,184 @@ import { Toast } from 'primeng/toast';
 import { Dialog } from 'primeng/dialog';
 import { DatePickerModule } from 'primeng/datepicker';
 import { AutoComplete } from 'primeng/autocomplete';
-
+import { Tooltip } from 'primeng/tooltip';
+import { NgIf } from '@angular/common';
+import { Tag } from 'primeng/tag';
 
 interface AutoCompleteCompleteEvent {
     originalEvent: Event;
     query: string;
 }
 
-
 @Component({
     selector: 'app-studio-list',
     standalone: true,
-    imports: [ButtonDirective, DatePickerModule, IconField, InputText, TableModule, FormsModule, Rating, Button, Toast, Dialog, Select, Slider, AutoComplete],
-    template: ` <div class="card">
-        <p-toast />
-        <div class="font-semibold text-xl mb-4">Studio List</div>
-        <p-table
-            #dt1
-            [value]="customers1"
-            dataKey="id"
-            [rows]="10"
-            [loading]="loading"
-            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-            [rowHover]="true"
-            [showGridlines]="true"
-            [paginator]="true"
-            [rowsPerPageOptions]="[10, 25, 50]"
-            [globalFilterFields]="['name', 'country.name', 'representative.name', 'status']"
-            responsiveLayout="scroll"
-        >
-            <ng-template #caption>
-                <div class="flex justify-between items-center flex-column sm:flex-row">
-                    <p-iconfield iconPosition="left" class="ml-auto">
-                        <button pButton label="Clear" class="p-button-outlined mb-2" icon="pi pi-filter-slash" (click)="clear(dt1)"></button>
-                    </p-iconfield>
-                </div>
-            </ng-template>
-            <ng-template #header>
-                <tr>
-                    <th style="min-width: 12rem">
-                        <div class="flex justify-between items-center">Name</div>
-                    </th>
-                    <th style="min-width: 12rem">
-                        <div class="flex justify-between items-center">Type</div>
-                    </th>
-                    <th style="min-width: 14rem">
-                        <div class="flex justify-between items-center">
-                            Location
-                            <p-columnFilter field="representative" matchMode="in" display="menu" [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
-                                <ng-template #header>
-                                    <p-select [options]="cities" [(ngModel)]="selectedCity" (onChange)="filters($event.value)" optionLabel="name" optionValue="value" placeholder="Select a City" class="w-full md:w-56" />
-                                </ng-template>
-                                <ng-template #filter let-value let-filter="filterCallback">
-                                    <p-autocomplete [ngModel]="value" [suggestions]="items" (completeMethod)="search($event)" />
+    imports: [ButtonDirective, DatePickerModule, IconField, InputText, TableModule, FormsModule, Rating, Button, Toast, Dialog, Slider, AutoComplete, Tooltip, ReactiveFormsModule, NgIf, Tag],
+    template: `
+        <div class="card">
+            <p-toast />
+            <div class="font-semibold text-xl mb-4">Studio List</div>
+            <p-table #dt1 [value]="viewData" dataKey="id" [rows]="10" [loading]="loading" [scrollable]="true"
+                     [rowHover]="true" [showGridlines]="true" [paginator]="true" [rowsPerPageOptions]="[10, 25, 50]" currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" [showCurrentPageReport]="true" >
+                <ng-template #header>
+                    <tr>
+                        <th style="min-width: 12rem">
+                            <div class="flex justify-between items-center">Name</div>
+                        </th>
+                        <th style="min-width: 12rem">
+                            <div class="flex justify-between items-center">Type</div>
+                        </th>
+                        <th style="min-width: 14rem">
+                            <div class="flex justify-between items-center">
+                                Location
+                                <p-columnFilter field="representative" matchMode="in" display="menu"
+                                                [showMatchModes]="false" [showOperator]="false" [showAddButton]="false"
+                                                [showApplyButton]="false" [showClearButton]="false">
+                                    <ng-template #header>
+                                        <div class="px-3 pt-3 pb-0">
+                                            <span class="font-bold"> Search by City/Area </span>
+                                        </div>
+                                    </ng-template>
+                                    <ng-template #filter let-value1 let-filter="filterCallback">
+                                        <p-autocomplete [style]="{ 'margin-left': '6px' }" [(ngModel)]="locationValue"
+                                                        [suggestions]="items" (completeMethod)="onSearch($event)"
+                                                        dropdown />
 
-                                    <div class="px-3 pt-3 pb-0">
-                                        <span class="font-bold">Search by Radius</span>
-                                    </div>
-                                    <p-slider [ngModel]="activityValues" [range]="false" (onSlideEnd)="filter($event.values)" styleClass="m-3" [style]="{ 'min-width': '12rem' }"></p-slider>
-                                    <div class="flex items-center justify-between px-2">
-                                        <span>{{ activityValues[0] }}</span>
-                                        <span>{{ activityValues[1] }}</span>
-                                    </div>
-                                </ng-template>
+                                        <div class="px-3 pt-3 pb-0">
+                                            <span class="font-bold">Search by Radius</span>
+                                            <small class="text-red-500" *ngIf="slider">Try enabling your location access</small>
 
-                                <p-select [options]="cities" [(ngModel)]="selectedCity" (onChange)="filters($event.value)" optionLabel="name" optionValue="value" placeholder="Select a City" class="w-full md:w-56" />
-                            </p-columnFilter>
+                                        </div>
+                                        <p-slider [ngModel]="activityValues" [disabled]="slider" [range]="false"
+                                                  (onChange)="distanceChange($event.value)" [max]="100" styleClass="m-3"
+                                                  [style]="{ 'min-width': '12rem' }"></p-slider>
+                                        <div class="flex items-center justify-between px-2">
+                                            <span>{{ activityValues[0] === 100 ? 'All' : activityValues[0] + 'm' }}</span>
+                                        </div>
+                                    </ng-template>
+                                    <ng-template #footer>
+                                        <div>
+                                            <p-button label="Apply" (onClick)="apply()" />
+                                        </div>
+                                    </ng-template>
+                                </p-columnFilter>
+                            </div>
+                        </th>
+                        <th style="min-width: 10rem">
+                            <div class="flex justify-between items-center">Amenities List</div>
+                        </th>
+                        <th style="min-width: 10rem">
+                            <div class="flex justify-between items-center">Price per hour</div>
+                        </th>
+                        <th style="min-width: 12rem">
+                            <div class="flex justify-between items-center">Rating</div>
+                        </th>
+                        <th style="min-width: 2rem" pFrozenColumn>
+                            <div class="flex justify-between items-center">Action</div>
+                        </th>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-studio>
+                    <tr>
+                        <td>
+                            {{ studio.Name }}
+                        </td>
+                        <td>
+                            {{ studio.Type }}
+                        </td>
+                        <td>{{ studio.Location.Area }} , {{ studio.Location.Address }}</td>
+                        <td>
+                            {{ studio.Amenities }}
+                        </td>
+                        <td>
+                            <span class="font-medium">{{ studio.Currency }}</span>
+                            <p-tag severity="success" value="{{ studio.PricePerHour }}/-" />
+                        </td>
+                        <td>
+                            <p-rating [(ngModel)]="studio.Rating" [readonly]="true" />
+                        </td>
+                        <td pFrozenColumn>
+                            <p-button pTooltip="Book now" tooltipPosition="left" icon="pi pi-bookmark"
+                                      (click)="bookStudio(studio)" severity="primary" rounded />
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr>
+                        <td colspan="8">No Studio found for this filter.</td>
+                    </tr>
+                </ng-template>
+                <ng-template #loadingbody>
+                    <tr>
+                        <td colspan="8">Loading Studio data. Please wait.</td>
+                    </tr>
+                </ng-template>
+                <ng-template #paginatorleft>
+                    <button pButton label="Clear" pTooltip="Clear filter" tooltipPosition="left"
+                            class="p-button-outlined mb-2" icon="pi pi-filter-slash" (click)="clear()"></button>
+                </ng-template>
+            </p-table>
+
+            <p-dialog header="Booking Details" [resizable]="false" [modal]="true" [maximizable]="true" appendTo="body"
+                      [(visible)]="dialogVisible" [style]="{ width: '25vw' }">
+                <form [formGroup]="bookingForm" (ngSubmit)="submitForm()">
+                    <div class="flex flex-col gap-4">
+                        <!-- Name Input -->
+                        <div class="flex flex-col gap-2">
+                            <label for="name">Name*</label>
+                            <input [required]="true" pInputText id="name" type="text" placeholder="Enter your full name"
+                                   formControlName="name" />
+                            <small class="text-red-500"
+                                   *ngIf="bookingForm.controls['name'].invalid && bookingForm.controls['name'].touched">Name
+                                is required</small>
                         </div>
-                    </th>
-                    <th style="min-width: 10rem">
-                        <div class="flex justify-between items-center">Amenities List</div>
-                    </th>
-                    <th style="min-width: 10rem">
-                        <div class="flex justify-between items-center">Price per hour</div>
-                    </th>
-                    <th style="min-width: 12rem">
-                        <div class="flex justify-between items-center">Rating</div>
-                    </th>
-                    <th style="min-width: 2rem">
-                        <div class="flex justify-between items-center">Action</div>
-                    </th>
-                </tr>
-            </ng-template>
-            <ng-template #body let-customer>
-                <tr>
-                    <td>
-                        {{ customer.Name }}
-                    </td>
-                    <td>
-                        {{ customer.Type }}
-                    </td>
-                    <td>{{ customer.Location.City }}, {{ customer.Location.Area }} , {{ customer.Location.Address }}</td>
-                    <td>
-                        {{ customer.Amenities }}
-                    </td>
-                    <td>{{ customer.Currency }} {{ customer.PricePerHour }}/-</td>
-                    <td>
-                        <p-rating [(ngModel)]="customer.Rating" [readonly]="true" />
-                    </td>
-                    <td>
-                        <p-button icon="pi pi-search" (click)="selectProduct(customer)" severity="secondary" rounded />
-                    </td>
-                </tr>
-            </ng-template>
-            <ng-template #emptymessage>
-                <tr>
-                    <td colspan="8">No customers found.</td>
-                </tr>
-            </ng-template>
-            <ng-template #loadingbody>
-                <tr>
-                    <td colspan="8">Loading customers data. Please wait.</td>
-                </tr>
-            </ng-template>
-        </p-table>
 
-        <p-dialog header="Booking" [resizable]="false" [modal]="true" [maximizable]="true" appendTo="body" [(visible)]="dialogVisible" [style]="{ width: '25vw' }">
-            <div class="flex flex-col gap-4">
-                <div class="flex flex-col gap-2">
-                    <label for="name1">Name</label>
-                    <input placeholder="Enter your full name" pInputText id="name1" type="text" />
-                </div>
-                <div class="flex flex-col gap-2">
-                    <label for="email1">Email</label>
-                    <input placeholder="Enter your email" pInputText id="email1" type="text" />
-                </div>
-                <div class="flex flex-col gap-2">
-                    <label for="age1">Date</label>
-                    <p-datepicker placeholder="Enter booking date" [(ngModel)]="date2" [iconDisplay]="'input'" [showIcon]="true" inputId="icondisplay" />
-                </div>
-                <div class="flex flex-col gap-2">
-                    <label for="age1">Time slot</label>
-                    <div class="flex gap-2 justify-between items-center">
-                        <p-datepicker [(ngModel)]="date3" [iconDisplay]="'input'" placeholder="Start time" [showIcon]="true" [timeOnly]="true" inputId="templatedisplay">
-                            <ng-template #inputicon let-clickCallBack="clickCallBack">
-                                <i class="pi pi-clock" (click)="clickCallBack($event)"></i>
-                            </ng-template>
-                        </p-datepicker>
-                        -
-                        <p-datepicker [(ngModel)]="date3" [iconDisplay]="'input'" [showIcon]="true" placeholder="End Time" [timeOnly]="true" inputId="templatedisplay">
-                            <ng-template #inputicon let-clickCallBack="clickCallBack">
-                                <i class="pi pi-clock" (click)="clickCallBack($event)"></i>
-                            </ng-template>
-                        </p-datepicker>
+                        <!-- Email Input -->
+                        <div class="flex flex-col gap-2">
+                            <label for="email">Email*</label>
+                            <input [required]="true" pInputText id="email" type="email" placeholder="Enter your email"
+                                   formControlName="email" />
+                            <small class="text-red-500"
+                                   *ngIf="bookingForm.controls['email'].invalid && bookingForm.controls['email'].touched">
+                                Enter a valid email address </small>
+                        </div>
+
+                        <!-- Date Picker -->
+                        <div class="flex flex-col gap-2">
+                            <label for="date">Date*</label>
+                            <p-datepicker [required]="true" placeholder="Select booking date" formControlName="date"
+                                          [minDate]="minDate" [showIcon]="true"></p-datepicker>
+                            <small class="text-red-500"
+                                   *ngIf="bookingForm.controls['date'].invalid && bookingForm.controls['date'].touched">Date
+                                is required</small>
+                        </div>
+
+                        <div class="flex flex-col gap-2">
+                            <label for="date">Start Time*</label>
+                            <p-datepicker hourFormat="12" [required]="true" formControlName="startTime"
+                                          placeholder="Start Time" [showIcon]="true" [timeOnly]="true"></p-datepicker>
+                            <small class="text-red-500"
+                                   *ngIf="bookingForm.controls['startTime'].invalid && bookingForm.controls['startTime'].touched">Start
+                                time is required</small>
+                            <small class="text-red-500"
+                                   *ngIf="bookingForm.hasError('invalidTimeRange') && bookingForm.touched"> Start and
+                                end time not valid. </small>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="date">End Time*</label>
+                            <p-datepicker [required]="true" hourFormat="12" formControlName="endTime"
+                                          placeholder="End Time" [showIcon]="true" [timeOnly]="true"></p-datepicker>
+                            <small class="text-red-500"
+                                   *ngIf="bookingForm.controls['endTime'].invalid && bookingForm.controls['endTime'].touched">End
+                                time is required</small>
+                        </div>
                     </div>
-                </div>
-            </div>
-
-            <ng-template #footer>
-                <p-button label="Ok" icon="pi pi-check" (onClick)="dialogVisible = false" />
-            </ng-template>
-        </p-dialog>
-    </div>`,
+                </form>
+                <ng-template #footer>
+                    <p-button label="Ok" icon="pi pi-check" (onClick)="submitForm()" [disabled]="bookingForm.invalid" />
+                </ng-template>
+            </p-dialog>
+        </div>`,
     providers: [StudioService, MessageService],
     styles: [
         `
@@ -182,81 +213,273 @@ interface AutoCompleteCompleteEvent {
     ]
 })
 export class StudioList implements OnInit {
-    customers1: Studio[] = [];
+    initData: Studio[] = [];
+    viewData: Studio[] = [];
+
+    locationValue: any;
+    radiusValue: any = 100;
+
     loading: boolean = true;
-    representatives: Representative[] = [];
+    userLocation: { latitude: number; longitude: number } = { latitude: 0, longitude: 0 };
     statuses: any[] = [];
-    date2: any;
-    date3: any;
+    formData: any;
     dialogVisible: boolean = false;
-    cities = [
-        { name: 'Search By Area', value: 'a' },
-        { name: 'Search By City', value: 'c' }
-    ];
-    selectedCity: any = 'a';
-    activityValues: number[] = [50];
+    slider: boolean = false;
+    activityValues: number[] = [100];
     items: any[] = [];
 
     value: any;
+
+
+    bookingForm!: FormGroup;
+    minDate = new Date();
 
     @ViewChild('filter') filter!: ElementRef;
 
     constructor(
         private studioService: StudioService,
-        private messageService: MessageService
-    ) {}
-
-    ngOnInit() {
-        this.studioService.getAllData().subscribe((item) => {
-            this.customers1 = item.Studios;
-            this.loading = false;
-        });
+        private messageService: MessageService,
+        private fb: FormBuilder
+    ) {
     }
 
-    search(event: AutoCompleteCompleteEvent) {
-        this.items = [...Array(10).keys()].map((item) => event.query + '-' + item);
-    }
-    onGlobalFilter(table: Table, event: Event) {
-        table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
-    }
-
-    clear(table: Table) {
-        table.clear();
-        this.filter.nativeElement.value = '';
-    }
-
-    getSeverity(status: string) {
-        switch (status) {
-            case 'qualified':
-            case 'instock':
-            case 'INSTOCK':
-            case 'DELIVERED':
-            case 'delivered':
-                return 'success';
-
-            case 'negotiation':
-            case 'lowstock':
-            case 'LOWSTOCK':
-            case 'PENDING':
-            case 'pending':
-                return 'warn';
-
-            case 'unqualified':
-            case 'outofstock':
-            case 'OUTOFSTOCK':
-            case 'CANCELLED':
-            case 'cancelled':
-                return 'danger';
-
-            default:
-                return 'info';
+    getUserLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    this.userLocation = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    };
+                },
+                (error: any) =>
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Couldn\'t get your location',
+                        detail: error.message
+                    })
+        )
+            ;
+        } else {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Couldn\'t get your location',
+                detail: 'Geolocation is not supported by this browser.'
+            })
         }
     }
 
-    selectProduct(customer: any) {
-        this.dialogVisible = true;
-        // this.messageService.add({ severity: 'info', summary: 'Product Selected', detail: customer.Name });
+    ngOnInit() {
+        this.bookingForm = this.fb.group(
+            {
+                name: ['', Validators.required],
+                email: ['', [Validators.required, Validators.email]],
+                date: ['', Validators.required],
+                startTime: ['', Validators.required],
+                endTime: ['', Validators.required]
+            },
+            { validator: this.startEndTimeValidator() }
+        );
+
+        this.studioService.getAllData().subscribe((item) => {
+            this.initData = this.viewData = item.Studios;
+            this.items = this.initData.map((studio) => studio.Location.Address);
+            this.loading = false;
+        });
+        this.getUserLocation();
     }
 
-    filters(value: any) {}
+    onSearch(event: AutoCompleteCompleteEvent) {
+        this.locationValue = event.query;
+        this.items = this.initData
+            .filter(
+                (studio) => studio.Location.City.toLowerCase().includes(event.query.toLowerCase()) || studio.Location.Area.toLowerCase().includes(event.query.toLowerCase()) || studio.Location.Address.toLowerCase().includes(event.query.toLowerCase())
+            )
+            .map((studio) => studio.Location.Address);
+    }
+
+    getByLocation(event: any) {
+        this.viewData = this.initData.filter(
+            (studio) => studio.Location.City.toLowerCase().includes(event.toLowerCase()) || studio.Location.Area.toLowerCase().includes(event.toLowerCase()) || studio.Location.Address.toLowerCase().includes(event.toLowerCase())
+        );
+        return this.viewData;
+    }
+
+    clear() {
+        this.viewData = this.initData;
+        this.locationValue = '';
+        this.activityValues[0] = this.radiusValue = 100;
+    }
+
+    bookStudio(studio: any) {
+        this.dialogVisible = true;
+        this.bookingForm.reset();
+        this.formData = studio;
+    }
+
+    apply() {
+        if (this.locationValue && this.radiusValue < 100) {
+            this.filterDistance(this.radiusValue, this.getByLocation(this.locationValue));
+        } else if (this.locationValue && this.radiusValue === 100) {
+            this.getByLocation(this.locationValue);
+        } else if (!this.locationValue && this.radiusValue < 100) {
+            this.filterDistance(this.radiusValue, this.initData);
+        } else {
+            this.viewData = this.initData;
+        }
+    }
+
+    distanceChange(radius: any) {
+        if (this.userLocation.longitude) {
+            this.activityValues[0] = this.radiusValue = radius;
+        }
+    }
+
+    filterDistance(radius: any, data: any) {
+        this.viewData = data.filter((studio: any) => {
+            const distance = this.calculateDistance(this.userLocation.latitude, this.userLocation.longitude, studio.Location.Coordinates.Latitude, studio.Location.Coordinates.Longitude);
+            return distance <= radius;
+        });
+    }
+
+    calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+        const R = 6371; // Earth's radius in km
+        const dLat = this.deg2rad(lat2 - lat1);
+        const dLon = this.deg2rad(lon2 - lon1);
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distance in km
+    }
+
+    deg2rad(deg: number): number {
+        return deg * (Math.PI / 180);
+    }
+
+    submitForm() {
+        if (this.bookingForm.valid) {
+            let res = {
+                ...this.bookingForm.value,
+                type: this.formData.Type,
+                location: this.formData.Location.Address,
+                close: this.formData.Availability.Close,
+                open: this.formData.Availability.Open,
+                id: this.formData.Id
+            };
+
+            let bookings: any[] = JSON.parse(localStorage.getItem('bookings') || '[]');
+
+            if (!this.checkAvailability(res, bookings)) {
+                bookings.push(res);
+                localStorage.setItem('bookings', JSON.stringify(bookings));
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Booking Confirmed!',
+                    detail: `Your ${this.formData.Type} is booked for ${this.formatDate(this.bookingForm.value.date)} from
+             ${this.convertTo12HourFormat(this.bookingForm.value.startTime)} to
+             ${this.convertTo12HourFormat(this.bookingForm.value.endTime)}.`
+                });
+
+                this.dialogVisible = false;
+            }
+        } else {
+            this.bookingForm.markAllAsTouched();
+        }
+    }
+
+    convertTo12HourFormat(time: any): string {
+        if (!time) return '';
+        if (time instanceof Date) {
+            let hours = time.getHours();
+            let minutes = time.getMinutes();
+            let period = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            return `${hours}:${minutes.toString().padStart(2, '0')} ${period}`;
+        }
+        if (typeof time === 'string') {
+            let [hours, minutes] = time.split(':').map(Number);
+            let period = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            return `${hours}:${minutes.toString().padStart(2, '0')} ${period}`;
+        }
+
+        return '';
+    }
+
+    formatDate(date: any): string {
+        if (!date) return '';
+
+        let dateObj = date instanceof Date ? date : new Date(date);
+        let day = dateObj.getDate();
+        let month = dateObj.toLocaleString('en-US', { month: 'long' });
+        let year = dateObj.getFullYear();
+        let suffix = 'th';
+        if (day % 10 === 1 && day !== 11) suffix = 'st';
+        else if (day % 10 === 2 && day !== 12) suffix = 'nd';
+        else if (day % 10 === 3 && day !== 13) suffix = 'rd';
+
+        return `${day}${suffix} ${month} ${year}`;
+    }
+
+    checkAvailability(submittedBooking: any, savedBookings: any[]): boolean {
+        const { id, date, startTime, endTime, open, close } = submittedBooking;
+        const bookingDate = new Date(date).toISOString().split('T')[0];
+        const openTime = new Date(date);
+        openTime.setHours(+open.split(':')[0], +open.split(':')[1], 0, 0);
+
+        const closeTime = new Date(date);
+        closeTime.setHours(+close.split(':')[0], +close.split(':')[1], 0, 0);
+        const submittedStart = new Date(startTime);
+        const submittedEnd = new Date(endTime);
+
+        // **Step 1: Check if booking is outside availability time**
+        if (submittedStart < openTime || submittedEnd > closeTime) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Booking Failed!',
+                detail: 'Booking is outside available hours!'
+            });
+
+            return true; // Conflict
+        }
+
+        // **Step 2: Filter bookings for the same ID & date**
+        const sameDayBookings = savedBookings.filter((b) => b.id === id && new Date(b.date).toISOString().split('T')[0] === bookingDate);
+
+        // **Step 3: Check for overlapping time slots**
+        for (const booking of sameDayBookings) {
+            const existingStart = new Date(booking.startTime);
+            const existingEnd = new Date(booking.endTime);
+            if (
+                (submittedStart >= existingStart && submittedStart < existingEnd) ||
+                (submittedEnd > existingStart && submittedEnd <= existingEnd) ||
+                (submittedStart <= existingStart && submittedEnd >= existingEnd)
+            ) {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Booking Failed!',
+                    detail: 'Time slot overlaps with an existing booking!'
+                });
+
+                return true; // Conflict found
+            }
+        }
+
+        return false; // No conflicts
+    }
+
+    startEndTimeValidator(): ValidatorFn {
+        return (control: AbstractControl): ValidationErrors | null => {
+            const startTime = control.get('startTime')?.value;
+            const endTime = control.get('endTime')?.value;
+
+            if (!startTime || !endTime) {
+                return null;
+            }
+
+            const start = new Date(startTime).getTime();
+            const end = new Date(endTime).getTime();
+
+            return start < end ? null : { invalidTimeRange: true };
+        };
+    }
 }

@@ -1,6 +1,6 @@
 {
-    "name": "sakai-ng",
-    "version": "19.0.1",
+    "name": "studio-booking-application",
+    "version": "1.0.1",
     "scripts": {
         "ng": "ng",
         "start": "ng serve",
