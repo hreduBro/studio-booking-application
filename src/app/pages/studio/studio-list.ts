@@ -127,7 +127,7 @@ interface AutoCompleteCompleteEvent {
                                                   (onChange)="distanceChange($event.value)" [max]="100" styleClass="m-3"
                                                   [style]="{ 'min-width': '12rem' }"></p-slider>
                                         <div class="flex items-center justify-between px-2">
-                                            <span>{{ activityValues[0] === 100 ? 'All' : activityValues[0] + 'm' }}</span>
+                                            <span>{{ activityValues[0] === 100 ? 'All' : activityValues[0] + 'km' }}</span>
                                         </div>
                                     </ng-template>
                                     <ng-template #footer>
