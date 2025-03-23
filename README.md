@@ -2,6 +2,12 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.0.6.
 
+# Live Demo
+
+🚀 **Studio Booking Application**
+
+🔗 **Live Demo:** [Click Here](https://studio-booking-application-t1.netlify.app/)
+
 ## Development server
 
 To start a local development server, run:
