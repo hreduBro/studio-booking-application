@@ -119,8 +119,7 @@ interface AutoCompleteCompleteEvent {
                                             <div class="flex flex-col">
                                                 <span class="font-bold">Search by Radius</span>
                                                 <small class="text-red-500 cursor-pointer" *ngIf="slider"
-                                                       (click)="getUserLocation()">Try enabling your location access!
-                                                    CLick here!</small>
+                                                       (click)="getUserLocation()">Enable location access! Click here!</small>
                                             </div>
                                         </div>
                                         <p-slider [ngModel]="activityValues" [disabled]="slider" [range]="false"
