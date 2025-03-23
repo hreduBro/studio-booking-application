@@ -515,10 +515,10 @@ export class StudioList implements OnInit {
     checkAvailability(submittedBooking: any, savedBookings: any[]): boolean {
         const { id, date, startTime, endTime, open, close } = submittedBooking;
         const bookingDate = new Date(date).toISOString().split('T')[0];
-        const openTime = new Date(date);
+        const openTime = new Date();
         openTime.setHours(+open.split(':')[0], +open.split(':')[1], 0, 0);
 
-        const closeTime = new Date(date);
+        const closeTime = new Date();
         closeTime.setHours(+close.split(':')[0], +close.split(':')[1], 0, 0);
         const submittedStart = startTime;
         const submittedEnd = endTime;
